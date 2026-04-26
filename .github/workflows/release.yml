@@ -1,0 +1,91 @@
+name: Build & Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version (z.B. 1.0.1)'
+        required: true
+        default: '1.0.0'
+
+jobs:
+  build:
+    runs-on: macos-14
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode Project
+        run: xcodegen generate
+
+      - name: Build Release
+        run: |
+          xcodebuild \
+            -project ClaudeIsland.xcodeproj \
+            -scheme ClaudeIsland \
+            -configuration Release \
+            -derivedDataPath build/DerivedData \
+            CODE_SIGN_IDENTITY="-" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            ENABLE_HARDENED_RUNTIME=NO \
+            build 2>&1 | grep -E "(error:|Build succeeded|Build FAILED)"
+
+      - name: Find & Sign App
+        run: |
+          APP=$(find build/DerivedData -name "ClaudeIsland.app" \
+            -not -path "*/PlugIns/*" -not -path "*/PackageFrameworks/*" | head -1)
+          echo "APP_PATH=$APP" >> $GITHUB_ENV
+          codesign --deep --force --sign - "$APP"
+          echo "Signed: $APP"
+
+      - name: Create DMG
+        run: |
+          mkdir -p dmg_src
+          cp -r "$APP_PATH" dmg_src/
+          ln -sf /Applications dmg_src/Applications
+          hdiutil create \
+            -volname "Claude Island" \
+            -srcfolder dmg_src \
+            -ov -format UDZO \
+            ClaudeIsland.dmg
+          echo "DMG created"
+
+      - name: Get Version
+        id: ver
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            echo "v=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+          else
+            echo "v=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name || format('v{0}', steps.ver.outputs.v) }}
+          name: Claude Island v${{ steps.ver.outputs.v }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          files: ClaudeIsland.dmg
+          body: |
+            ## Claude Island v${{ steps.ver.outputs.v }}
+
+            Claude AI direkt in deiner Mac-Notch 🧠
+
+            ### ⬇️ Installation
+            1. **ClaudeIsland.dmg** herunterladen
+            2. DMG öffnen → App in `/Programme` ziehen
+            3. Beim ersten Start: **Rechtsklick → Öffnen** (einmalig für Gatekeeper)
+            4. API-Key in Einstellungen (`⌘,`) eintragen
+
+            ### Voraussetzungen
+            - macOS 13 Ventura oder neuer
+            - Claude API-Key → [console.anthropic.com](https://console.anthropic.com/)

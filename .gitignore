@@ -1,0 +1,13 @@
+.DS_Store
+build/
+*.xcodeproj/
+*.xcworkspace/
+DerivedData/
+*.ipa
+*.dSYM.zip
+*.dSYM
+Pods/
+.build/
+xcuserdata/
+*.xcscmblueprint
+*.xccheckout
