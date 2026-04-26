@@ -2,12 +2,11 @@ import AppKit
 import SwiftUI
 
 final class IslandPanel: NSPanel {
-    private let viewModel = ClaudeViewModel()
+    private let manager = IslandManager()
 
     init() {
-        let size = ClaudeViewModel.collapsedSize
         super.init(
-            contentRect: NSRect(origin: .zero, size: size),
+            contentRect: NSRect(origin: .zero, size: IslandManager.collapsedSize),
             styleMask: [.borderless, .nonactivatingPanel, .fullSizeContentView],
             backing: .buffered,
             defer: false
@@ -15,6 +14,7 @@ final class IslandPanel: NSPanel {
         configure()
         placeAtTop()
         mountContent()
+        manager.startAll()
     }
 
     private func configure() {
@@ -37,27 +37,23 @@ final class IslandPanel: NSPanel {
     }
 
     private func mountContent() {
-        viewModel.onResize = { [weak self] newSize in
-            self?.animateTo(size: newSize)
-        }
-        let root = IslandView(viewModel: viewModel)
-        contentView = NSHostingView(rootView: root)
+        manager.onResize = { [weak self] size in self?.animateTo(size: size) }
+        contentView = NSHostingView(rootView: IslandView(mgr: manager))
     }
 
     private func animateTo(size: NSSize) {
         guard let screen = NSScreen.main else { return }
         let x = screen.frame.midX - size.width / 2
         let y = screen.frame.maxY - size.height
-        let target = NSRect(x: x, y: y, width: size.width, height: size.height)
         NSAnimationContext.runAnimationGroup {
             $0.duration = 0.32
             $0.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
-            animator().setFrame(target, display: true, animate: true)
+            animator().setFrame(NSRect(x: x, y: y, width: size.width, height: size.height),
+                                display: true, animate: true)
         }
     }
 
     func show() { orderFrontRegardless() }
-
     override var canBecomeKey: Bool { true }
     override var canBecomeMain: Bool { false }
 }
