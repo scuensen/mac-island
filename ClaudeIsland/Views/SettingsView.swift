@@ -232,7 +232,7 @@ struct APIContent: View {
     @ObservedObject var s: SettingsStore
     @State private var showKey = false
     @State private var testStatus: TestStatus = .idle
-    enum TestStatus { case idle, testing, ok, fail(String) }
+    enum TestStatus: Equatable { case idle, testing, ok, fail(String) }
 
     var body: some View {
         VStack(spacing: 14) {
