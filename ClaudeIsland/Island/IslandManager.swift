@@ -55,11 +55,18 @@ final class IslandManager: ObservableObject {
         }
     }
 
+    // Only enabled widgets
+    var enabledWidgets: [WidgetKind] {
+        WidgetKind.allCases.filter { SettingsStore.shared.isWidgetEnabled($0.rawValue) }
+    }
+
     // Contextual widget for collapsed state
     var collapsedWidget: WidgetKind {
-        if timer.isRunning  { return .timer  }
-        if music.isPlaying  { return .music  }
-        return activeWidget
+        let s = SettingsStore.shared
+        if s.isWidgetEnabled(WidgetKind.timer.rawValue)  && timer.isRunning { return .timer }
+        if s.isWidgetEnabled(WidgetKind.music.rawValue)  && music.isPlaying { return .music }
+        // Fall back to first enabled widget
+        return enabledWidgets.contains(activeWidget) ? activeWidget : (enabledWidgets.first ?? .claude)
     }
 
     func startAll() {

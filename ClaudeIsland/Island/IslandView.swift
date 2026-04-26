@@ -204,7 +204,7 @@ struct ExpandedIsland: View {
             // Widget selector bar
             Divider().background(.white.opacity(0.06))
             HStack(spacing: 0) {
-                ForEach(IslandManager.WidgetKind.allCases) { kind in
+                ForEach(mgr.enabledWidgets) { kind in
                     WidgetTab(kind: kind, isActive: mgr.activeWidget == kind)
                         .onTapGesture { withAnimation(.easeOut(duration: 0.15)) { mgr.activeWidget = kind } }
                 }
