@@ -14,6 +14,9 @@ jobs:
   build:
     runs-on: macos-14
 
+    permissions:
+      contents: write
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -22,10 +25,13 @@ jobs:
         run: brew install xcodegen
 
       - name: Generate Xcode Project
-        run: xcodegen generate
+        run: |
+          xcodegen generate --spec project.yml
+          ls -la ClaudeIsland.xcodeproj/
 
       - name: Build Release
         run: |
+          set -o pipefail
           xcodebuild \
             -project ClaudeIsland.xcodeproj \
             -scheme ClaudeIsland \
@@ -35,15 +41,15 @@ jobs:
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
             ENABLE_HARDENED_RUNTIME=NO \
-            build 2>&1 | grep -E "(error:|Build succeeded|Build FAILED)"
+            build
 
       - name: Find & Sign App
         run: |
           APP=$(find build/DerivedData -name "ClaudeIsland.app" \
             -not -path "*/PlugIns/*" -not -path "*/PackageFrameworks/*" | head -1)
           echo "APP_PATH=$APP" >> $GITHUB_ENV
+          echo "Found: $APP"
           codesign --deep --force --sign - "$APP"
-          echo "Signed: $APP"
 
       - name: Create DMG
         run: |
@@ -55,7 +61,7 @@ jobs:
             -srcfolder dmg_src \
             -ov -format UDZO \
             ClaudeIsland.dmg
-          echo "DMG created"
+          ls -lh ClaudeIsland.dmg
 
       - name: Get Version
         id: ver
@@ -69,7 +75,7 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref_name || format('v{0}', steps.ver.outputs.v) }}
+          tag_name: ${{ github.ref_name }}
           name: Claude Island v${{ steps.ver.outputs.v }}
           draft: false
           prerelease: false
