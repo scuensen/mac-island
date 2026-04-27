@@ -13,15 +13,15 @@ final class ClaudeViewModel: ObservableObject {
     private var clickMonitor: Any?
     private var autoCollapseTask: Task<Void, Never>?
 
-    // Sichtbare Höhe der Pille = Notch-Höhe (≈37–38pt auf MacBook M-Serie).
-    // safeAreaInsets.top ist die verlässlichste Quelle; falls 0 oder zu klein,
-    // Fallback auf 38pt (passt für alle aktuellen MacBook-Notch-Modelle).
-    // +22pt damit die gerundeten oberen Ecken über den Bildschirmrand ragen
-    // und abgeschnitten werden → Dynamic-Island-Effekt mit flacher Oberkante.
-    static var collapsedHeight: CGFloat {
-        let safeInset = NSScreen.screens.first?.safeAreaInsets.top ?? 0
-        let visibleH: CGFloat = safeInset > 20 ? safeInset : 38
-        return visibleH + 22
+    // Nur als Startwert für init(); IslandPanel berechnet die echte Höhe live.
+    static var collapsedHeight: CGFloat { notchHeight + 22 }
+
+    static var notchHeight: CGFloat {
+        let screen = NSScreen.screens.first
+        let safe = screen?.safeAreaInsets.top ?? 0
+        if safe > 5 { return safe }
+        let menuArea = screen.map { $0.frame.maxY - $0.visibleFrame.maxY } ?? 0
+        return max(menuArea, NSStatusBar.system.thickness)
     }
 
     static var collapsed: NSSize { NSSize(width: 280, height: collapsedHeight) }
