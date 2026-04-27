@@ -88,6 +88,13 @@ final class IslandPanel: NSPanel {
         }
     }
 
+    // macOS schiebt Fenster automatisch in den sichtbaren Bereich.
+    // Überschreiben damit das Panel 22pt über den Bildschirmrand ragen kann
+    // (die gerundeten oberen Ecken werden so vom Bildschirmrand abgeschnitten).
+    override func constrainFrameRect(_ frameRect: NSRect, to screen: NSScreen?) -> NSRect {
+        return frameRect
+    }
+
     override var canBecomeKey: Bool { true }
     override var canBecomeMain: Bool { false }
 }
