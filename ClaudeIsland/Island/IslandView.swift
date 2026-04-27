@@ -24,6 +24,7 @@ struct IslandView: View {
 
 struct CollapsedView: View {
     @ObservedObject var vm: ClaudeViewModel
+    @StateObject private var usage = UsageStore.shared
 
     var body: some View {
         HStack(spacing: 9) {
@@ -53,9 +54,20 @@ struct CollapsedView: View {
                 Image(systemName: "exclamationmark.circle.fill")
                     .foregroundStyle(.red).font(.caption)
             case .idle:
-                Text("Klicken zum Fragen")
-                    .font(.system(size: 11))
-                    .foregroundStyle(.white.opacity(0.25))
+                if let rem = usage.rateLimit.tokensRemaining,
+                   let lim = usage.rateLimit.tokensLimit, lim > 0 {
+                    let pct = Double(rem) / Double(lim)
+                    Text("\(rem / 1000)k / \(lim / 1000)k tok")
+                        .font(.system(size: 10, design: .monospaced))
+                        .foregroundStyle(
+                            pct > 0.5 ? .green.opacity(0.65)
+                            : pct > 0.2 ? .orange.opacity(0.7)
+                            : .red.opacity(0.8))
+                } else {
+                    Text("Ready")
+                        .font(.system(size: 11))
+                        .foregroundStyle(.white.opacity(0.25))
+                }
             }
         }
         .padding(.horizontal, 16)

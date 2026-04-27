@@ -35,15 +35,19 @@ final class IslandPanel: NSPanel {
         let screen = menuBarScreen
         let s = size ?? frame.size
         let x = screen.frame.midX - s.width / 2
-        let y = screen.frame.maxY - s.height
+        // Collapsed: Panel ist 22pt höher als sichtbar → obere Ecken ragen über
+        // den Bildschirmrand und werden abgeschnitten (Dynamic-Island-Effekt).
+        let overhang: CGFloat = s.height < 100 ? 22 : 0
+        let y = screen.frame.maxY - s.height + overhang
         setFrame(NSRect(x: x, y: y, width: s.width, height: s.height), display: true)
     }
 
     private func animateTo(_ size: NSSize) {
         let screen = menuBarScreen
+        let overhang: CGFloat = size.height < 100 ? 22 : 0
         let target = NSRect(
             x: screen.frame.midX - size.width / 2,
-            y: screen.frame.maxY - size.height,
+            y: screen.frame.maxY - size.height + overhang,
             width: size.width, height: size.height)
         NSAnimationContext.runAnimationGroup {
             $0.duration = 0.3

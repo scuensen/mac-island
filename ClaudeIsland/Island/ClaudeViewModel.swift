@@ -13,12 +13,15 @@ final class ClaudeViewModel: ObservableObject {
     private var clickMonitor: Any?
     private var autoCollapseTask: Task<Void, Never>?
 
-    // Notch-Höhe dynamisch: safeAreaInsets.top auf MacBooks mit Notch (~37pt),
-    // sonst Menüleistenhöhe (~24pt). Plus 1px damit der Schatten sichtbar ist.
+    // Sichtbare Höhe der Pille: safeAreaInsets.top (Notch) oder Menüleisten-Dicke.
+    // +22pt damit die gerundeten oberen Ecken über den Bildschirmrand ragen und
+    // abgeschnitten werden → Dynamic-Island-Effekt mit flacher Oberkante.
     static var collapsedHeight: CGFloat {
         let screen = NSScreen.screens.first
-        let notch = screen?.safeAreaInsets.top ?? 0
-        return notch > 0 ? notch + 1 : (NSStatusBar.system.thickness + 1)
+        let safeInset = screen?.safeAreaInsets.top ?? 0
+        let menuBar   = NSStatusBar.system.thickness
+        let visibleH  = max(safeInset, menuBar)
+        return visibleH + 22
     }
 
     static var collapsed: NSSize { NSSize(width: 280, height: collapsedHeight) }
