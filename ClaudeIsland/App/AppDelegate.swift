@@ -4,6 +4,7 @@ import SwiftUI
 class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem?
     private var islandPanel: IslandPanel?
+    private var settingsWindow: NSWindow?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
@@ -24,7 +25,19 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func openSettings() {
+        if settingsWindow == nil {
+            let hosting = NSHostingView(
+                rootView: SettingsView().environmentObject(SettingsStore.shared))
+            let win = NSWindow(
+                contentRect: NSRect(x: 0, y: 0, width: 540, height: 500),
+                styleMask: [.titled, .closable, .miniaturizable],
+                backing: .buffered, defer: false)
+            win.title = "Claude Island – Einstellungen"
+            win.contentView = hosting
+            win.center()
+            settingsWindow = win
+        }
         NSApp.activate(ignoringOtherApps: true)
-        NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+        settingsWindow?.makeKeyAndOrderFront(nil)
     }
 }
