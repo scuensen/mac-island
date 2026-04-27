@@ -13,7 +13,15 @@ final class ClaudeViewModel: ObservableObject {
     private var clickMonitor: Any?
     private var autoCollapseTask: Task<Void, Never>?
 
-    static let collapsed = NSSize(width: 280, height: 44)
+    // Notch-Höhe dynamisch: safeAreaInsets.top auf MacBooks mit Notch (~37pt),
+    // sonst Menüleistenhöhe (~24pt). Plus 1px damit der Schatten sichtbar ist.
+    static var collapsedHeight: CGFloat {
+        let screen = NSScreen.screens.first
+        let notch = screen?.safeAreaInsets.top ?? 0
+        return notch > 0 ? notch + 1 : (NSStatusBar.system.thickness + 1)
+    }
+
+    static var collapsed: NSSize { NSSize(width: 280, height: collapsedHeight) }
     static let expanded  = NSSize(width: 520, height: 400)
 
     func expand() {

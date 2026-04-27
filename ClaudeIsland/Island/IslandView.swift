@@ -28,12 +28,12 @@ struct CollapsedView: View {
     var body: some View {
         HStack(spacing: 9) {
             Image(systemName: "brain")
-                .font(.system(size: 15, weight: .medium))
+                .font(.system(size: 13, weight: .medium))
                 .foregroundStyle(vm.phase == .thinking ? .blue : .white.opacity(0.85))
                 .symbolEffect(.pulse, isActive: vm.phase == .thinking)
 
             Text("Claude")
-                .font(.system(size: 13, weight: .semibold, design: .rounded))
+                .font(.system(size: 12, weight: .semibold, design: .rounded))
                 .foregroundStyle(.white)
 
             Spacer(minLength: 0)
